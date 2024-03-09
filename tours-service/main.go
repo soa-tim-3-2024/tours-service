@@ -54,6 +54,8 @@ func main() {
 	router.HandleFunc("/tours", tourHandler.Create).Methods("POST")
 	router.HandleFunc("/tours", tourHandler.Update).Methods("PUT")
 	router.HandleFunc("/touristposition", touristPositionHandler.Create).Methods("POST")
+	router.HandleFunc("/touristposition/{tourist_id}", touristPositionHandler.GetByTouristId).Methods("GET")
+	router.HandleFunc("/touristposition", touristPositionHandler.Update).Methods("PUT")
 
 	// Set up CORS middleware
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
