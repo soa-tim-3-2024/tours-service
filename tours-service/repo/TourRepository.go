@@ -19,6 +19,15 @@ func (repo *TourRepository) GetAuthorTours(authorId int) ([]model.Tour, error) {
 	return tours, nil
 }
 
+func (repo *TourRepository) UpdateTour(tour *model.Tour) error {
+	dbResult := repo.DatabaseConnection.Save(tour)
+	if dbResult.Error != nil {
+		return dbResult.Error
+	}
+	println("Rows affected: ", dbResult.RowsAffected)
+	return nil
+}
+
 func (repo *TourRepository) CreateTour(tour *model.Tour) error {
 	var maxID uint
 	result := repo.DatabaseConnection.Model(&model.Tour{}).Select("COALESCE(MAX(id), 0)").Scan(&maxID)

@@ -31,12 +31,6 @@ type Tour struct {
 	Distance    float64     `json:"distance"`
 }
 
-/*
-func (tour *Tour) BeforeCreate(scope *gorm.DB) error {
-	tour.ID = uuid.New()
-	return nil
-}
-*/
 // konvertuje tip podatka iz go-a u tip podatka u bazi (jer gorm ne moze sam da rukuje sa nizom stringova kao atributom)
 func (a StringArray) Value() (driver.Value, error) {
 	return json.Marshal(a)

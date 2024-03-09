@@ -24,7 +24,7 @@ func initDB() *gorm.DB {
 
 	database.AutoMigrate(&model.Student{})
 	database.AutoMigrate(&model.Tour{})
-	//database.Exec("INSERT INTO students VALUES ('aec7e123-233d-4a09-a289-75308ea5b7e6', 'Marko Markovic', 'Graficki dizajn')")
+	database.AutoMigrate(&model.TouristPosition{})
 	return database
 }
 
@@ -42,12 +42,18 @@ func main() {
 	tourService := &service.TourService{TourRepo: tourRepo}
 	tourHandler := &handler.TourHandler{TourService: tourService}
 
+	touristPositionRepo := &repo.TouristPositionRepository{DatabaseConnection: database}
+	touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
+	touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/students/{id}", studentHandler.Get).Methods("GET")
 	router.HandleFunc("/students", studentHandler.Create).Methods("POST")
 	router.HandleFunc("/tours/{authorId}", tourHandler.Get).Methods("GET")
 	router.HandleFunc("/tours", tourHandler.Create).Methods("POST")
+	router.HandleFunc("/tours", tourHandler.Update).Methods("PUT")
+	router.HandleFunc("/touristposition", touristPositionHandler.Create).Methods("POST")
 
 	// Set up CORS middleware
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
