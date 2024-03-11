@@ -5,6 +5,7 @@ import (
 	"database-example/service"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -29,6 +30,19 @@ func (handler *TourHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	}
 	writer.WriteHeader(http.StatusOK)
 	json.NewEncoder(writer).Encode(tours)
+}
+
+func (handler *TourHandler) GetById(writer http.ResponseWriter, req *http.Request) {
+	id := mux.Vars(req)["id"]
+	log.Printf("Tour sa id-em %s", id)
+	student, err := handler.TourService.FindTour(id)
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
+	json.NewEncoder(writer).Encode(student)
 }
 
 func (handler *TourHandler) Update(writer http.ResponseWriter, req *http.Request) {
