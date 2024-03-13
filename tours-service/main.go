@@ -25,6 +25,7 @@ func initDB() *gorm.DB {
 	database.AutoMigrate(&model.Student{})
 	database.AutoMigrate(&model.Tour{})
 	database.AutoMigrate(&model.TouristPosition{})
+	database.AutoMigrate(&model.KeyPoint{})
 	return database
 }
 
@@ -42,6 +43,10 @@ func main() {
 	tourService := &service.TourService{TourRepo: tourRepo}
 	tourHandler := &handler.TourHandler{TourService: tourService}
 
+	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: database}
+	keyPointService := &service.KeyPointService{KeyPointRepo: keyPointRepo}
+	keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
+
 	touristPositionRepo := &repo.TouristPositionRepository{DatabaseConnection: database}
 	touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
 	touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
@@ -57,6 +62,7 @@ func main() {
 	router.HandleFunc("/touristposition/{tourist_id}", touristPositionHandler.GetByTouristId).Methods("GET")
 	router.HandleFunc("/touristposition", touristPositionHandler.Update).Methods("PUT")
 	router.HandleFunc("/tour/{id}", tourHandler.GetById).Methods("GET")
+	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
 
 	// Set up CORS middleware
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
