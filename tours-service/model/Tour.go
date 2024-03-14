@@ -9,6 +9,7 @@ import (
 // enum u go-u
 type Status int
 
+type TourDurations []Duration
 type StringArray []string
 
 const (
@@ -19,16 +20,18 @@ const (
 )
 
 type Tour struct {
-	ID          int         `json:"id"`
-	AuthorId    int         `json:"authorId"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Difficulty  int         `json:"difficulty"`
-	Category    int         `json:"category"`
-	Tags        StringArray `json:"tags"`
-	TourStatus  Status      `json:"tourStatus"`
-	Price       float64     `json:"price"`
-	Distance    float64     `json:"distance"`
+	ID          int           `json:"id"`
+	AuthorId    int           `json:"authorId"`
+	Name        string        `json:"name"`
+	Description string        `json:"description"`
+	Difficulty  int           `json:"difficulty"`
+	Category    int           `json:"category"`
+	Tags        StringArray   `json:"tags"`
+	TourStatus  Status        `json:"status"`
+	Price       float64       `json:"price"`
+	Distance    float64       `json:"distance"`
+	KeyPoints   []KeyPoint    `json:"keyPoints"`
+	Durations   TourDurations `json:"durations" gorm:"type:jsonb"`
 }
 
 // konvertuje tip podatka iz go-a u tip podatka u bazi (jer gorm ne moze sam da rukuje sa nizom stringova kao atributom)

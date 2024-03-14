@@ -7,22 +7,22 @@ import (
 )
 
 type KeyPoint struct {
-	ID                  int         	`json:"id"`
-	TourId              int       		`json:"tourId"`
-	Name                string			`json:"name"`
-	Description         string    		`json:"description"`
-	Longitude           float64   		`json:"longitude"`
-	Latitude            float64   		`json:"latitude"`
-	LocationAddress     string    		`json:"locationAddress"`
-	ImagePath           string    		`json:"imagePath"`
-	Order               int       		`json:"order"`
-	IsEncounterRequired bool      		`json:"isEncounterRequired"`
-	HasEncounter        bool      		`json:"hasEncounter"`
+	ID                  int     `json:"id"`
+	TourId              int     `json:"tourId"`
+	Name                string  `json:"name"`
+	Description         string  `json:"description"`
+	Longitude           float64 `json:"longitude"`
+	Latitude            float64 `json:"latitude"`
+	LocationAddress     string  `json:"locationAddress"`
+	ImagePath           string  `json:"imagePath"`
+	Order               int     `json:"order"`
+	IsEncounterRequired bool    `json:"isEncounterRequired"`
+	HasEncounter        bool    `json:"hasEncounter"`
 }
 
 type KeyPointSecret struct {
-	Description string    	`json:"description"`  
-	Images      string 		`json:"images"`
+	Description string `json:"description"`
+	Images      string `json:"images"`
 }
 
 func (r KeyPointSecret) Value() (driver.Value, error) {

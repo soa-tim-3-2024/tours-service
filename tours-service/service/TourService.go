@@ -41,3 +41,12 @@ func (service *TourService) Update(tour *model.Tour) error {
 	}
 	return nil
 }
+
+func (service *TourService) PublishTour(tour *model.Tour) error {
+	tour.TourStatus = model.Status(model.Published)
+	err := service.TourRepo.UpdateTour(tour)
+	if err != nil {
+		return err
+	}
+	return nil
+}

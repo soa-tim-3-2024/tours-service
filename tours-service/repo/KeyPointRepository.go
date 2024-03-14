@@ -27,7 +27,6 @@ func (repo *KeyPointRepository) CreateKeyPoint(kp *model.KeyPoint) error {
 	}
 	print("ID: ", maxID)
 	kp.ID = int(maxID) + 1
-	println("KeyPoint: ", kp)
 	dbResult := repo.DatabaseConnection.Create(kp)
 	if dbResult.Error != nil {
 		return dbResult.Error

@@ -62,6 +62,7 @@ func main() {
 	router.HandleFunc("/touristposition/{tourist_id}", touristPositionHandler.GetByTouristId).Methods("GET")
 	router.HandleFunc("/touristposition", touristPositionHandler.Update).Methods("PUT")
 	router.HandleFunc("/tour/{id}", tourHandler.GetById).Methods("GET")
+	router.HandleFunc("/tours/publish", tourHandler.Publish).Methods("PUT")
 	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
 
 	// Set up CORS middleware

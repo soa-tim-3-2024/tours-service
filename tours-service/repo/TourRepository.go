@@ -12,7 +12,12 @@ type TourRepository struct {
 
 func (repo *TourRepository) GetAuthorTours(authorId int) ([]model.Tour, error) {
 	tours := []model.Tour{}
-	dbResult := repo.DatabaseConnection.Where("author_id = ?", authorId).Find(&tours)
+	durations := []model.Duration{}
+	dbResult := repo.DatabaseConnection.Where("author_id = ?", authorId).Omit("durations").Find(&tours)
+	for i := range tours {
+		repo.DatabaseConnection.Model(&model.Tour{}).Pluck("durations", &durations).Where("id=?", tours[i].ID)
+		tours[i].Durations = durations
+	}
 	if dbResult != nil {
 		return tours, dbResult.Error
 	}
@@ -21,7 +26,15 @@ func (repo *TourRepository) GetAuthorTours(authorId int) ([]model.Tour, error) {
 
 func (repo *TourRepository) FindById(id string) (model.Tour, error) {
 	tour := model.Tour{}
-	dbResult := repo.DatabaseConnection.First(&tour, "id = ?", id)
+	durations := []model.Duration{}
+	dbResult := repo.DatabaseConnection.Preload("KeyPoints").Omit("durations").First(&tour, "id = ?", id)
+
+	repo.DatabaseConnection.Model(&model.Tour{}).Pluck("durations", &durations).Where("id=?", tour.ID)
+	tour.Durations = durations
+
+	if tour.Durations == nil {
+		tour.Durations = []model.Duration{}
+	}
 	if dbResult != nil {
 		return tour, dbResult.Error
 	}
@@ -43,9 +56,7 @@ func (repo *TourRepository) CreateTour(tour *model.Tour) error {
 	if result.Error != nil {
 		panic("failed to find maximum ID")
 	}
-	print("ID: ", maxID)
 	tour.ID = int(maxID) + 1
-	println("Tour: ", tour)
 	dbResult := repo.DatabaseConnection.Create(tour)
 	if dbResult.Error != nil {
 		return dbResult.Error
