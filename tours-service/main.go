@@ -26,6 +26,7 @@ func initDB() *gorm.DB {
 	database.AutoMigrate(&model.Tour{})
 	database.AutoMigrate(&model.TouristPosition{})
 	database.AutoMigrate(&model.KeyPoint{})
+	database.AutoMigrate(&model.Preference{})
 	return database
 }
 
@@ -51,6 +52,10 @@ func main() {
 	touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
 	touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
 
+	preferenceRepo := &repo.PreferenceRepository{DatabaseConnection: database}
+	preferenceService := &service.PreferenceService{PrefRepo: preferenceRepo}
+	preferenceHandler := &handler.PreferenceHandler{PreferenceService: preferenceService}
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/students/{id}", studentHandler.Get).Methods("GET")
@@ -64,6 +69,10 @@ func main() {
 	router.HandleFunc("/tour/{id}", tourHandler.GetById).Methods("GET")
 	router.HandleFunc("/tours/publish", tourHandler.Publish).Methods("PUT")
 	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
+	router.HandleFunc("/preference/{id}", preferenceHandler.GetByUserId).Methods("GET")
+	router.HandleFunc("/preference", preferenceHandler.Create).Methods("POST")
+	router.HandleFunc("/preference", preferenceHandler.Update).Methods("PUT")
+	router.HandleFunc("/preference/{id}", preferenceHandler.Delete).Methods("DELETE")
 
 	// Set up CORS middleware
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
