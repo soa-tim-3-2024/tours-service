@@ -50,3 +50,12 @@ func (service *TourService) PublishTour(tour *model.Tour) error {
 	}
 	return nil
 }
+
+func (service *TourService) ArchiveTour(tour *model.Tour) error {
+	tour.TourStatus = model.Status(model.Archived)
+	err := service.TourRepo.UpdateTour(tour)
+	if err != nil {
+		return err
+	}
+	return nil
+}

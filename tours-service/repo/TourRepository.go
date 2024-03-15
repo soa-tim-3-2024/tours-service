@@ -15,7 +15,7 @@ func (repo *TourRepository) GetAuthorTours(authorId int) ([]model.Tour, error) {
 	durations := []model.Duration{}
 	dbResult := repo.DatabaseConnection.Where("author_id = ?", authorId).Omit("durations").Find(&tours)
 	for i := range tours {
-		repo.DatabaseConnection.Model(&model.Tour{}).Pluck("durations", &durations).Where("id=?", tours[i].ID)
+		repo.DatabaseConnection.Model(&model.Tour{}).Where("id=?", tours[i].ID).Pluck("durations", &durations)
 		tours[i].Durations = durations
 	}
 	if dbResult != nil {

@@ -73,6 +73,7 @@ func main() {
 	router.HandleFunc("/touristposition", touristPositionHandler.Update).Methods("PUT")
 	router.HandleFunc("/tour/{id}", tourHandler.GetById).Methods("GET")
 	router.HandleFunc("/tours/publish", tourHandler.Publish).Methods("PUT")
+	router.HandleFunc("/tours/archive", tourHandler.Archive).Methods("PUT")
 	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
 	router.HandleFunc("/preference/{id}", preferenceHandler.GetByUserId).Methods("GET")
 	router.HandleFunc("/preference", preferenceHandler.Create).Methods("POST")
