@@ -27,6 +27,7 @@ func initDB() *gorm.DB {
 	database.AutoMigrate(&model.TouristPosition{})
 	database.AutoMigrate(&model.KeyPoint{})
 	database.AutoMigrate(&model.Preference{})
+	database.AutoMigrate(&model.Equipment{})
 	return database
 }
 
@@ -56,6 +57,10 @@ func main() {
 	preferenceService := &service.PreferenceService{PrefRepo: preferenceRepo}
 	preferenceHandler := &handler.PreferenceHandler{PreferenceService: preferenceService}
 
+	eqRepo := &repo.EquipmentRepository{DatabaseConnection: database}
+	eqService := &service.EquipmentService{EquipmentRepo: eqRepo}
+	eqHandler := &handler.EquipmentHandler{EquipmentService: eqService}
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/students/{id}", studentHandler.Get).Methods("GET")
@@ -73,6 +78,13 @@ func main() {
 	router.HandleFunc("/preference", preferenceHandler.Create).Methods("POST")
 	router.HandleFunc("/preference", preferenceHandler.Update).Methods("PUT")
 	router.HandleFunc("/preference/{id}", preferenceHandler.Delete).Methods("DELETE")
+	router.HandleFunc("/equipment/all", eqHandler.GetAll).Methods("GET")
+	router.HandleFunc("/equipment/tour/{id}", eqHandler.GetByTourId).Methods("GET")
+	router.HandleFunc("/equipment", eqHandler.Create).Methods("POST")
+	router.HandleFunc("/equipment", eqHandler.Update).Methods("PUT")
+	router.HandleFunc("/equipment/{id}", eqHandler.Delete).Methods("DELETE")
+	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Add).Methods("POST")
+	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Remove).Methods("DELETE")
 
 	// Set up CORS middleware
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})

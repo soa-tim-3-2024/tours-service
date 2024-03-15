@@ -32,6 +32,7 @@ type Tour struct {
 	Distance    float64       `json:"distance"`
 	KeyPoints   []KeyPoint    `json:"keyPoints"`
 	Durations   TourDurations `json:"durations" gorm:"type:jsonb"`
+	Equipment []Equipment `gorm:"many2many:tour_equipment;"`
 }
 
 // konvertuje tip podatka iz go-a u tip podatka u bazi (jer gorm ne moze sam da rukuje sa nizom stringova kao atributom)
