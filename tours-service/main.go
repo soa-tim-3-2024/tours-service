@@ -31,6 +31,11 @@ func initDB() *gorm.DB {
 	return database
 }
 
+func configureToursHandler(router *mux.Router, tourHandler *handler.TourHandler) {
+	router.HandleFunc("/tours/published/all", tourHandler.FindPublishedTours).Methods("GET")
+	router.HandleFunc("/tours/tours-list", tourHandler.GetToursByIds).Methods("POST")
+}
+
 func main() {
 	database := initDB()
 	if database == nil {
@@ -86,6 +91,8 @@ func main() {
 	router.HandleFunc("/equipment/{id}", eqHandler.Delete).Methods("DELETE")
 	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Add).Methods("POST")
 	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Remove).Methods("DELETE")
+
+	configureToursHandler(router, tourHandler)
 
 	// Set up CORS middleware
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})

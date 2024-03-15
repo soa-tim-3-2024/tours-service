@@ -13,7 +13,23 @@ type TourService struct {
 func (service *TourService) GetAuthorTours(authorId int) (*[]model.Tour, error) {
 	tours, err := service.TourRepo.GetAuthorTours(authorId)
 	if err != nil {
-		return nil, fmt.Errorf(fmt.Sprintf("menu item with id %s not found", "-2"))
+		return nil, fmt.Errorf(fmt.Sprintf("tours with author id %d not found", authorId))
+	}
+	return &tours, nil
+}
+
+func (service *TourService) GetPublishedTours() (*[]model.Tour, error) {
+	tours, err := service.TourRepo.GetPublishedTours()
+	if err != nil {
+		return nil, fmt.Errorf("error while getting published tours")
+	}
+	return &tours, nil
+}
+
+func (service *TourService) GetTours(Ids []int) (*[]model.Tour, error) {
+	tours, err := service.TourRepo.GetTours(Ids)
+	if err != nil {
+		return nil, fmt.Errorf("error while getting published tours")
 	}
 	return &tours, nil
 }
