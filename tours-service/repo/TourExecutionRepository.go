@@ -35,6 +35,15 @@ func (repo *TourExecutionRepository) UpdateTourExecution(execution *model.TourEx
 	return nil
 }
 
+func (repo *TourExecutionRepository) GetTourExecutions(tourId int, touristId int) ([]model.TourExecution, error) {
+	executions := []model.TourExecution{}
+	dbResult := repo.DatabaseConnection.Find(&executions, "tour_id = ? and tourist_id = ? and status != 0 and last_activity >= now() - interval '7 days'", tourId, touristId)
+	if dbResult != nil {
+		return executions, dbResult.Error
+	}
+	return executions, nil
+}
+
 func (repo *TourExecutionRepository) GetTourExecution(tourId int, touristId int) (model.TourExecution, error) {
 	execution := model.TourExecution{}
 	dbResult := repo.DatabaseConnection.Find(&execution, "tour_id = ? and tourist_id = ? and status = 0", tourId, touristId)

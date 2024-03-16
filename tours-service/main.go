@@ -29,6 +29,7 @@ func initDB() *gorm.DB {
 	database.AutoMigrate(&model.Preference{})
 	database.AutoMigrate(&model.Equipment{})
 	database.AutoMigrate(&model.TourExecution{})
+	database.AutoMigrate(&model.Review{})
 	return database
 }
 
@@ -77,6 +78,10 @@ func main() {
 	tourExecutionService := &service.TourExecutionService{TourExecutionRepo: tourExecutionRepo, KeyPointRepo: keyPointRepo}
 	tourExecutionHandler := &handler.TourExecutionHandler{TourExecutionService: tourExecutionService}
 
+	reviewRepo := &repo.ReviewRepository{DatabaseConnection: database}
+	reviewService := &service.ReviewService{ReviewRepo: reviewRepo}
+	reviewHandler := &handler.ReviewHandler{ReviewService: reviewService}
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/students/{id}", studentHandler.Get).Methods("GET")
@@ -103,6 +108,9 @@ func main() {
 	router.HandleFunc("/equipment/{id}", eqHandler.Delete).Methods("DELETE")
 	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Add).Methods("POST")
 	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Remove).Methods("DELETE")
+	router.HandleFunc("/tour/canBeRated/{tourId}/{userId}", tourExecutionHandler.CanTourBeRated).Methods("GET")
+	router.HandleFunc("/review", reviewHandler.Create).Methods("POST")
+	router.HandleFunc("/reviews/{tourId}", reviewHandler.GetReviewsByTourId).Methods("GET")
 
 	configureToursHandler(router, tourHandler)
 	configureTourExecutionHandler(router, tourExecutionHandler)

@@ -3,6 +3,7 @@ package service
 import (
 	"database-example/model"
 	"database-example/repo"
+	"fmt"
 	"math"
 	"time"
 )
@@ -10,6 +11,20 @@ import (
 type TourExecutionService struct {
 	TourExecutionRepo *repo.TourExecutionRepository
 	KeyPointRepo      *repo.KeyPointRepository
+}
+
+func (service *TourExecutionService) CanBeRated(tourId int, userId int) (bool, error) {
+	executions, err := service.TourExecutionRepo.GetTourExecutions(tourId, userId)
+	if err != nil {
+		return false, fmt.Errorf(fmt.Sprintf("tour ex with tour id %d and userId %d not found", tourId, userId))
+	}
+	if(len(executions) > 0){
+		println(len(executions))
+		return true, nil
+	}else{
+		println(len(executions))
+		return false, nil
+	}
 }
 
 func (service *TourExecutionService) Create(tourId int, touristId int) (model.TourExecution, error) {
