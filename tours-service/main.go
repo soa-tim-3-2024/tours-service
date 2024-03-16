@@ -28,12 +28,18 @@ func initDB() *gorm.DB {
 	database.AutoMigrate(&model.KeyPoint{})
 	database.AutoMigrate(&model.Preference{})
 	database.AutoMigrate(&model.Equipment{})
+	database.AutoMigrate(&model.TourExecution{})
 	return database
 }
 
 func configureToursHandler(router *mux.Router, tourHandler *handler.TourHandler) {
 	router.HandleFunc("/tours/published/all", tourHandler.FindPublishedTours).Methods("GET")
 	router.HandleFunc("/tours/tours-list", tourHandler.GetToursByIds).Methods("POST")
+}
+
+func configureTourExecutionHandler(router *mux.Router, tourExecutionHandler *handler.TourExecutionHandler) {
+	router.HandleFunc("/tour-execution/{tourId}/{touristId}", tourExecutionHandler.Create).Methods("GET")
+	router.HandleFunc("/tour-execution/check-completition", tourExecutionHandler.CheckKeyPointCompletition).Methods("POST")
 }
 
 func main() {
@@ -66,6 +72,10 @@ func main() {
 	eqService := &service.EquipmentService{EquipmentRepo: eqRepo}
 	eqHandler := &handler.EquipmentHandler{EquipmentService: eqService}
 
+	tourExecutionRepo := &repo.TourExecutionRepository{DatabaseConnection: database}
+	tourExecutionService := &service.TourExecutionService{TourExecutionRepo: tourExecutionRepo, KeyPointRepo: keyPointRepo}
+	tourExecutionHandler := &handler.TourExecutionHandler{TourExecutionService: tourExecutionService}
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/students/{id}", studentHandler.Get).Methods("GET")
@@ -93,6 +103,7 @@ func main() {
 	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Remove).Methods("DELETE")
 
 	configureToursHandler(router, tourHandler)
+	configureTourExecutionHandler(router, tourExecutionHandler)
 
 	// Set up CORS middleware
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})

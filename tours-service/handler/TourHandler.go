@@ -155,5 +155,3 @@ func (handler *TourHandler) Create(writer http.ResponseWriter, req *http.Request
 	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(tour)
 }
-
-//TO DO: add key point
