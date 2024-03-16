@@ -28,17 +28,28 @@ func (service *TourExecutionService) Create(tourId int, touristId int) (model.To
 	return execution, nil
 }
 
+func (service *TourExecutionService) AbandonTour(tourExecutionId int) (model.TourExecution, error) {
+	execution, _ := service.TourExecutionRepo.GetTourExecutionById(tourExecutionId)
+	execution.Status = model.TourExecutionStatus(model.Abandoned)
+	execution.LastActivity = time.Now()
+	err := service.TourExecutionRepo.UpdateTourExecution(&execution)
+	if err != nil {
+		return execution, err
+	}
+	return execution, nil
+}
+
 func (service *TourExecutionService) CheckKeyPointCompletition(position model.TouristPositionDto) (model.TourExecution, error) {
 	var execution model.TourExecution
 	keyPoints, _ := service.KeyPointRepo.FindByTourId(position.TourId)
 	execution, _ = service.TourExecutionRepo.GetTourExecution(position.TourId, position.TouristId)
 	for i := 0; i < len(keyPoints); i++ {
 		if keyPoints[i].ID == execution.NextKeyPointId {
-			if calculateDistance(keyPoints[i].Longitude, keyPoints[i].Latitude, position.Longitude, position.Latitude) > 200 {
+			if calculateDistance(keyPoints[i].Longitude, keyPoints[i].Latitude, position.Longitude, position.Latitude) < 200 {
 				if (i + 1) >= len(keyPoints) {
 					execution, _ = service.TourExecutionRepo.CompleteTourExecution(execution)
 				} else {
-					execution, _ = service.TourExecutionRepo.CompleteTourExecution(execution)
+					execution, _ = service.TourExecutionRepo.UpdateNextKeyPoint(keyPoints[i+1].ID, execution)
 				}
 				break
 			}

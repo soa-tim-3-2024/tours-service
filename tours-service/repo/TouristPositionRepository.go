@@ -16,7 +16,6 @@ func (repo *TouristPositionRepository) GetByTouristId(id int) (model.TouristPosi
 	if dbResult.Error != nil {
 		return position, dbResult.Error
 	}
-	println("Rows affected: ", dbResult.RowsAffected)
 	return position, nil
 }
 

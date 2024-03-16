@@ -26,9 +26,27 @@ func (repo *TourExecutionRepository) CreateTourExecution(tourExecution *model.To
 	return nil
 }
 
+func (repo *TourExecutionRepository) UpdateTourExecution(execution *model.TourExecution) error {
+	dbResult := repo.DatabaseConnection.Save(execution)
+	if dbResult.Error != nil {
+		return dbResult.Error
+	}
+	println("Rows affected: ", dbResult.RowsAffected)
+	return nil
+}
+
 func (repo *TourExecutionRepository) GetTourExecution(tourId int, touristId int) (model.TourExecution, error) {
 	execution := model.TourExecution{}
-	dbResult := repo.DatabaseConnection.Find(&execution, "tour_id = ? and tourist_id = ?", tourId, touristId)
+	dbResult := repo.DatabaseConnection.Find(&execution, "tour_id = ? and tourist_id = ? and status = 0", tourId, touristId)
+	if dbResult != nil {
+		return execution, dbResult.Error
+	}
+	return execution, nil
+}
+
+func (repo *TourExecutionRepository) GetTourExecutionById(tourExecutionId int) (model.TourExecution, error) {
+	execution := model.TourExecution{}
+	dbResult := repo.DatabaseConnection.Find(&execution, "id", tourExecutionId)
 	if dbResult != nil {
 		return execution, dbResult.Error
 	}

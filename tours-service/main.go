@@ -40,6 +40,7 @@ func configureToursHandler(router *mux.Router, tourHandler *handler.TourHandler)
 func configureTourExecutionHandler(router *mux.Router, tourExecutionHandler *handler.TourExecutionHandler) {
 	router.HandleFunc("/tour-execution/{tourId}/{touristId}", tourExecutionHandler.Create).Methods("GET")
 	router.HandleFunc("/tour-execution/check-completition", tourExecutionHandler.CheckKeyPointCompletition).Methods("POST")
+	router.HandleFunc("/tour-execution-abandoning/{id}", tourExecutionHandler.AbandonTour).Methods("GET")
 }
 
 func main() {
@@ -90,6 +91,7 @@ func main() {
 	router.HandleFunc("/tours/publish", tourHandler.Publish).Methods("PUT")
 	router.HandleFunc("/tours/archive", tourHandler.Archive).Methods("PUT")
 	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
+	router.HandleFunc("/keyPoints/tour/{id}", keyPointHandler.GetKeyPoints).Methods("GET")
 	router.HandleFunc("/preference/{id}", preferenceHandler.GetByUserId).Methods("GET")
 	router.HandleFunc("/preference", preferenceHandler.Create).Methods("POST")
 	router.HandleFunc("/preference", preferenceHandler.Update).Methods("PUT")

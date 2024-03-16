@@ -4,7 +4,6 @@ import (
 	"database-example/model"
 	"database-example/service"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -20,8 +19,6 @@ func (handler *TourExecutionHandler) Create(writer http.ResponseWriter, req *htt
 	tourId, _ := strconv.Atoi(id)
 	id = mux.Vars(req)["touristId"]
 	touristId, _ := strconv.Atoi(id)
-	fmt.Println("sve ok?", tourId)
-	fmt.Println("sve ok?", touristId)
 	execution, err := handler.TourExecutionService.Create(tourId, touristId)
 	if err != nil {
 		println("Error while creating tour execution session")
@@ -31,6 +28,21 @@ func (handler *TourExecutionHandler) Create(writer http.ResponseWriter, req *htt
 	writer.WriteHeader(http.StatusCreated)
 	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(execution)
+}
+
+func (handler *TourExecutionHandler) AbandonTour(writer http.ResponseWriter, req *http.Request) {
+	id := mux.Vars(req)["id"]
+	tourExecutionId, _ := strconv.Atoi(id)
+	execution, err := handler.TourExecutionService.AbandonTour(tourExecutionId)
+	if err != nil {
+		println("Error while creating tour execution session")
+		writer.WriteHeader(http.StatusExpectationFailed)
+		return
+	}
+	writer.WriteHeader(http.StatusCreated)
+	writer.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(writer).Encode(execution)
+
 }
 
 func (handler *TourExecutionHandler) CheckKeyPointCompletition(writer http.ResponseWriter, req *http.Request) {
