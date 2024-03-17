@@ -59,7 +59,7 @@ func (handler *EquipmentHandler) Update(writer http.ResponseWriter, req *http.Re
 	}
 	err = handler.EquipmentService.Update(&equipment)
 	if err != nil {
-		println("Error while updating tour")
+		println("Error while updating equipment")
 		writer.WriteHeader(http.StatusExpectationFailed)
 		return
 	}

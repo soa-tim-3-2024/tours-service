@@ -96,6 +96,8 @@ func main() {
 	router.HandleFunc("/tours/publish", tourHandler.Publish).Methods("PUT")
 	router.HandleFunc("/tours/archive", tourHandler.Archive).Methods("PUT")
 	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
+	router.HandleFunc("/keyPoints", keyPointHandler.Update).Methods("PUT")
+	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Delete).Methods("DELETE")
 	router.HandleFunc("/keyPoints/tour/{id}", keyPointHandler.GetKeyPoints).Methods("GET")
 	router.HandleFunc("/preference/{id}", preferenceHandler.GetByUserId).Methods("GET")
 	router.HandleFunc("/preference", preferenceHandler.Create).Methods("POST")

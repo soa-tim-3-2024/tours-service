@@ -43,3 +43,23 @@ func (repo *KeyPointRepository) CreateKeyPoint(kp *model.KeyPoint) error {
 	println("Rows affected: ", dbResult.RowsAffected)
 	return nil
 }
+
+func (repo *KeyPointRepository) Update(kp *model.KeyPoint) error {
+	dbResult := repo.DatabaseConnection.Save(kp)
+	if dbResult.Error != nil {
+		return dbResult.Error
+	}
+	println("Rows affected: ", dbResult.RowsAffected)
+	return nil
+}
+
+
+func (repo *KeyPointRepository) DeleteById(id string) (model.KeyPoint, error) {
+	kP := model.KeyPoint{}
+	repo.DatabaseConnection.First(&kP, "id = ?", id)
+	dbResult := repo.DatabaseConnection.Delete(&kP)
+	if dbResult != nil {
+		return kP, dbResult.Error
+	}
+	return kP, nil
+}

@@ -33,3 +33,19 @@ func (service *KeyPointService) Create(kP *model.KeyPoint) error {
 	}
 	return nil
 }
+
+func (service *KeyPointService) Update(kP *model.KeyPoint) error {
+	err := service.KeyPointRepo.Update(kP)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (service *KeyPointService) DeleteById(id string) (*model.KeyPoint, error) {
+	kP, err := service.KeyPointRepo.DeleteById(id)
+	if err != nil {
+		return nil, fmt.Errorf(fmt.Sprintf("kP item with id %s not found", id))
+	}
+	return &kP, nil
+}
