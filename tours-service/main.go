@@ -28,7 +28,20 @@ func initDB() *gorm.DB {
 	database.AutoMigrate(&model.KeyPoint{})
 	database.AutoMigrate(&model.Preference{})
 	database.AutoMigrate(&model.Equipment{})
+	database.AutoMigrate(&model.TourExecution{})
+	database.AutoMigrate(&model.Review{})
 	return database
+}
+
+func configureToursHandler(router *mux.Router, tourHandler *handler.TourHandler) {
+	router.HandleFunc("/tours/published/all", tourHandler.FindPublishedTours).Methods("GET")
+	router.HandleFunc("/tours/tours-list", tourHandler.GetToursByIds).Methods("POST")
+}
+
+func configureTourExecutionHandler(router *mux.Router, tourExecutionHandler *handler.TourExecutionHandler) {
+	router.HandleFunc("/tour-execution/{tourId}/{touristId}", tourExecutionHandler.Create).Methods("GET")
+	router.HandleFunc("/tour-execution/check-completition", tourExecutionHandler.CheckKeyPointCompletition).Methods("POST")
+	router.HandleFunc("/tour-execution-abandoning/{id}", tourExecutionHandler.AbandonTour).Methods("GET")
 }
 
 func main() {
@@ -61,6 +74,14 @@ func main() {
 	eqService := &service.EquipmentService{EquipmentRepo: eqRepo}
 	eqHandler := &handler.EquipmentHandler{EquipmentService: eqService}
 
+	tourExecutionRepo := &repo.TourExecutionRepository{DatabaseConnection: database}
+	tourExecutionService := &service.TourExecutionService{TourExecutionRepo: tourExecutionRepo, KeyPointRepo: keyPointRepo}
+	tourExecutionHandler := &handler.TourExecutionHandler{TourExecutionService: tourExecutionService}
+
+	reviewRepo := &repo.ReviewRepository{DatabaseConnection: database}
+	reviewService := &service.ReviewService{ReviewRepo: reviewRepo}
+	reviewHandler := &handler.ReviewHandler{ReviewService: reviewService}
+
 	router := mux.NewRouter().StrictSlash(true)
 
 	router.HandleFunc("/students/{id}", studentHandler.Get).Methods("GET")
@@ -75,6 +96,9 @@ func main() {
 	router.HandleFunc("/tours/publish", tourHandler.Publish).Methods("PUT")
 	router.HandleFunc("/tours/archive", tourHandler.Archive).Methods("PUT")
 	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
+	router.HandleFunc("/keyPoints", keyPointHandler.Update).Methods("PUT")
+	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Delete).Methods("DELETE")
+	router.HandleFunc("/keyPoints/tour/{id}", keyPointHandler.GetKeyPoints).Methods("GET")
 	router.HandleFunc("/preference/{id}", preferenceHandler.GetByUserId).Methods("GET")
 	router.HandleFunc("/preference", preferenceHandler.Create).Methods("POST")
 	router.HandleFunc("/preference", preferenceHandler.Update).Methods("PUT")
@@ -86,6 +110,12 @@ func main() {
 	router.HandleFunc("/equipment/{id}", eqHandler.Delete).Methods("DELETE")
 	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Add).Methods("POST")
 	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Remove).Methods("DELETE")
+	router.HandleFunc("/tour/canBeRated/{tourId}/{userId}", tourExecutionHandler.CanTourBeRated).Methods("GET")
+	router.HandleFunc("/review", reviewHandler.Create).Methods("POST")
+	router.HandleFunc("/reviews/{tourId}", reviewHandler.GetReviewsByTourId).Methods("GET")
+
+	configureToursHandler(router, tourHandler)
+	configureTourExecutionHandler(router, tourExecutionHandler)
 
 	// Set up CORS middleware
 	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})

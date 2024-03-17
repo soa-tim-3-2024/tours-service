@@ -24,6 +24,39 @@ func (repo *TourRepository) GetAuthorTours(authorId int) ([]model.Tour, error) {
 	return tours, nil
 }
 
+func (repo *TourRepository) GetPublishedTours() ([]model.Tour, error) {
+	tours := []model.Tour{}
+	durations := []model.Duration{}
+	dbResult := repo.DatabaseConnection.Preload("KeyPoints").Where("tour_status = 1").Omit("durations").Find(&tours)
+	for i := range tours {
+		repo.DatabaseConnection.Model(&model.Tour{}).Where("id=?", tours[i].ID).Pluck("durations", &durations)
+		tours[i].Durations = durations
+		tours[i].KeyPoints = tours[i].KeyPoints[:1]
+	}
+	if dbResult != nil {
+		return tours, dbResult.Error
+	}
+	return tours, nil
+}
+
+func (repo *TourRepository) GetTours(Ids []int) ([]model.Tour, error) {
+	tours := []model.Tour{}
+	durations := []model.Duration{}
+	if len(Ids) == 0 {
+		return tours, nil
+	}
+	dbResult := repo.DatabaseConnection.Preload("KeyPoints").Omit("durations").Find(&tours, Ids)
+	for i := range tours {
+		repo.DatabaseConnection.Model(&model.Tour{}).Where("id=?", tours[i].ID).Pluck("durations", &durations)
+		tours[i].Durations = durations
+		tours[i].KeyPoints = tours[i].KeyPoints[:1]
+	}
+	if dbResult != nil {
+		return tours, dbResult.Error
+	}
+	return tours, nil
+}
+
 func (repo *TourRepository) FindById(id string) (model.Tour, error) {
 	tour := model.Tour{}
 	durations := []model.Duration{}

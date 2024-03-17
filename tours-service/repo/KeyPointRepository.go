@@ -19,6 +19,15 @@ func (repo *KeyPointRepository) FindById(id string) (model.KeyPoint, error) {
 	return kP, nil
 }
 
+func (repo *KeyPointRepository) FindByTourId(id int) ([]model.KeyPoint, error) {
+	kP := []model.KeyPoint{}
+	dbResult := repo.DatabaseConnection.Find(&kP, "tour_id = ?", id)
+	if dbResult != nil {
+		return kP, dbResult.Error
+	}
+	return kP, nil
+}
+
 func (repo *KeyPointRepository) CreateKeyPoint(kp *model.KeyPoint) error {
 	var maxID uint
 	result := repo.DatabaseConnection.Model(&model.KeyPoint{}).Select("COALESCE(MAX(id), 0)").Scan(&maxID)
@@ -33,4 +42,24 @@ func (repo *KeyPointRepository) CreateKeyPoint(kp *model.KeyPoint) error {
 	}
 	println("Rows affected: ", dbResult.RowsAffected)
 	return nil
+}
+
+func (repo *KeyPointRepository) Update(kp *model.KeyPoint) error {
+	dbResult := repo.DatabaseConnection.Save(kp)
+	if dbResult.Error != nil {
+		return dbResult.Error
+	}
+	println("Rows affected: ", dbResult.RowsAffected)
+	return nil
+}
+
+
+func (repo *KeyPointRepository) DeleteById(id string) (model.KeyPoint, error) {
+	kP := model.KeyPoint{}
+	repo.DatabaseConnection.First(&kP, "id = ?", id)
+	dbResult := repo.DatabaseConnection.Delete(&kP)
+	if dbResult != nil {
+		return kP, dbResult.Error
+	}
+	return kP, nil
 }

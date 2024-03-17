@@ -12,6 +12,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type tourIds struct {
+	Ids []int
+}
+
 type TourHandler struct {
 	TourService *service.TourService
 }
@@ -20,9 +24,38 @@ func (handler *TourHandler) Get(writer http.ResponseWriter, req *http.Request) {
 	id := mux.Vars(req)["authorId"]
 	s, err := strconv.Atoi(id)
 	if err != nil {
-		fmt.Println("Can't convert this to an int!")
+		fmt.Println("Can't convert to int!")
 	}
 	tours, err := handler.TourService.GetAuthorTours(s)
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
+	json.NewEncoder(writer).Encode(tours)
+}
+
+func (handler *TourHandler) FindPublishedTours(writer http.ResponseWriter, req *http.Request) {
+	tours, err := handler.TourService.GetPublishedTours()
+	writer.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		writer.WriteHeader(http.StatusNotFound)
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
+	json.NewEncoder(writer).Encode(tours)
+}
+
+func (handler *TourHandler) GetToursByIds(writer http.ResponseWriter, req *http.Request) {
+	var Ids tourIds
+	err := json.NewDecoder(req.Body).Decode(&Ids)
+	if err != nil {
+		println("Error while parsing json body")
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	tours, err := handler.TourService.GetTours(Ids.Ids)
 	writer.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		writer.WriteHeader(http.StatusNotFound)
@@ -122,5 +155,3 @@ func (handler *TourHandler) Create(writer http.ResponseWriter, req *http.Request
 	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(tour)
 }
-
-//TO DO: add key point
