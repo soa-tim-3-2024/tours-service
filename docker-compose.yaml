@@ -1,0 +1,73 @@
+version: "3.7"
+services:
+  tourserver:
+    build:
+      context: ./tours-service/tours-service/
+      dockerfile: Dockerfile
+    image: aplikacijadocker
+    container_name: aplikacijakon
+    restart: always
+    networks:
+      - tourserver
+    ports:
+      - 8081:8081
+    depends_on:
+      - database
+
+  database:
+    image: postgres:16-alpine
+    container_name: postgreskon
+    restart: always
+    networks:
+      - tourserver
+    ports:
+      - 4000:5432
+    environment:
+      POSTGRES_PASSWORD: super
+      POSTGRES_USER: postgres
+      POSTGRES_DB: nzm
+    volumes:
+      - database-data:/var/lib/postgresql/data
+
+  encounterserver:
+    build:
+      context: ./encounters-service/encounters-service/
+      dockerfile: Dockerfile
+    image: aplikacijaenkdok
+    container_name: aplikacijaenkkon
+    restart: always
+    networks:
+      - encounterserver
+    ports:
+      - 8082:8082
+    depends_on:
+      - dataenk
+
+  dataenk:
+    image: postgres:16-alpine
+    container_name: postgresenkkon
+    restart: always
+    networks:
+      - encounterserver
+    ports:
+      - 4001:5432
+    environment:
+      POSTGRES_PASSWORD: super
+      POSTGRES_USER: postgres
+      POSTGRES_DB: enknzm
+    volumes:
+      - dataenk-data:/var/lib/postgresql/data
+
+volumes:
+  database-data:
+    name: server-database
+  dataenk-data:
+    name: server-dataenk
+
+networks:
+  tourserver:
+    name: tourserver
+    driver: bridge
+  encounterserver:
+    name: encounterserver
+    driver: bridge
