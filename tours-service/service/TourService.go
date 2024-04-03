@@ -10,12 +10,12 @@ type TourService struct {
 	TourRepo *repo.TourRepository
 }
 
-func (service *TourService) GetAuthorTours(authorId int) (*[]model.Tour, error) {
+func (service *TourService) GetAuthorTours(authorId int) ([]model.Tour, error) {
 	tours, err := service.TourRepo.GetAuthorTours(authorId)
 	if err != nil {
 		return nil, fmt.Errorf(fmt.Sprintf("tours with author id %d not found", authorId))
 	}
-	return &tours, nil
+	return tours, nil
 }
 
 func (service *TourService) GetPublishedTours() (*[]model.Tour, error) {
