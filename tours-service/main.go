@@ -124,5 +124,5 @@ func main() {
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
 	println("Server starting")
-	log.Fatal(http.ListenAndServe(":8081", handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router)))
+	log.Fatal(http.ListenAndServe(":8083", handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router)))
 }
