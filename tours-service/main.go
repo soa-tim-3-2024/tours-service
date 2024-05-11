@@ -3,19 +3,29 @@ package main
 import (
 	"database-example/handler"
 	"database-example/model"
+	tour "database-example/proto"
 	"database-example/repo"
 	"database-example/service"
-	"log"
-	"net/http"
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/gorilla/handlers"
+	"log"
+	"net"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func initDB() *gorm.DB {
-	dsn := "host=database user=postgres password=super dbname=nzm port=5432 sslmode=disable"
+
+	dsn := "host=localhost user=postgres password=super dbname=nzm port=5432 sslmode=disable"
+	//dsn := "host=database user=postgres password=super dbname=nzm port=5432 sslmode=disable"
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		print(err)
@@ -50,79 +60,110 @@ func main() {
 		print("FAILED TO CONNECT TO DB")
 		return
 	}
-	studentRepo := &repo.StudentRepository{DatabaseConnection: database}
-	studentService := &service.StudentService{StudentRepo: studentRepo}
-	studentHandler := &handler.StudentHandler{StudentService: studentService}
+	// studentRepo := &repo.StudentRepository{DatabaseConnection: database}
+	// studentService := &service.StudentService{StudentRepo: studentRepo}
+	// studentHandler := &handler.StudentHandler{StudentService: studentService}
 
 	tourRepo := &repo.TourRepository{DatabaseConnection: database}
 	tourService := &service.TourService{TourRepo: tourRepo}
-	tourHandler := &handler.TourHandler{TourService: tourService}
+	//tourHandler := &handler.TourHandler{TourService: tourService}
 
-	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: database}
-	keyPointService := &service.KeyPointService{KeyPointRepo: keyPointRepo}
-	keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
+	// keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: database}
+	// keyPointService := &service.KeyPointService{KeyPointRepo: keyPointRepo}
+	// keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
 
-	touristPositionRepo := &repo.TouristPositionRepository{DatabaseConnection: database}
-	touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
-	touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
+	// touristPositionRepo := &repo.TouristPositionRepository{DatabaseConnection: database}
+	// touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
+	// touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
 
-	preferenceRepo := &repo.PreferenceRepository{DatabaseConnection: database}
-	preferenceService := &service.PreferenceService{PrefRepo: preferenceRepo}
-	preferenceHandler := &handler.PreferenceHandler{PreferenceService: preferenceService}
+	// preferenceRepo := &repo.PreferenceRepository{DatabaseConnection: database}
+	// preferenceService := &service.PreferenceService{PrefRepo: preferenceRepo}
+	// preferenceHandler := &handler.PreferenceHandler{PreferenceService: preferenceService}
 
-	eqRepo := &repo.EquipmentRepository{DatabaseConnection: database}
-	eqService := &service.EquipmentService{EquipmentRepo: eqRepo}
-	eqHandler := &handler.EquipmentHandler{EquipmentService: eqService}
+	// eqRepo := &repo.EquipmentRepository{DatabaseConnection: database}
+	// eqService := &service.EquipmentService{EquipmentRepo: eqRepo}
+	// eqHandler := &handler.EquipmentHandler{EquipmentService: eqService}
 
-	tourExecutionRepo := &repo.TourExecutionRepository{DatabaseConnection: database}
-	tourExecutionService := &service.TourExecutionService{TourExecutionRepo: tourExecutionRepo, KeyPointRepo: keyPointRepo}
-	tourExecutionHandler := &handler.TourExecutionHandler{TourExecutionService: tourExecutionService}
+	// tourExecutionRepo := &repo.TourExecutionRepository{DatabaseConnection: database}
+	// tourExecutionService := &service.TourExecutionService{TourExecutionRepo: tourExecutionRepo, KeyPointRepo: keyPointRepo}
+	// tourExecutionHandler := &handler.TourExecutionHandler{TourExecutionService: tourExecutionService}
 
-	reviewRepo := &repo.ReviewRepository{DatabaseConnection: database}
-	reviewService := &service.ReviewService{ReviewRepo: reviewRepo}
-	reviewHandler := &handler.ReviewHandler{ReviewService: reviewService}
+	// reviewRepo := &repo.ReviewRepository{DatabaseConnection: database}
+	// reviewService := &service.ReviewService{ReviewRepo: reviewRepo}
+	// reviewHandler := &handler.ReviewHandler{ReviewService: reviewService}
 
-	router := mux.NewRouter().StrictSlash(true)
+	listener, err := net.Listen("tcp", "localhost:8083")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer func(listener net.Listener) {
+		err := listener.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(listener)
 
-	router.HandleFunc("/students/{id}", studentHandler.Get).Methods("GET")
-	router.HandleFunc("/students", studentHandler.Create).Methods("POST")
-	router.HandleFunc("/tours/{authorId}", tourHandler.Get).Methods("GET")
-	router.HandleFunc("/tours", tourHandler.Create).Methods("POST")
-	router.HandleFunc("/tours", tourHandler.Update).Methods("PUT")
-	router.HandleFunc("/touristposition", touristPositionHandler.Create).Methods("POST")
-	router.HandleFunc("/touristposition/{tourist_id}", touristPositionHandler.GetByTouristId).Methods("GET")
-	router.HandleFunc("/touristposition", touristPositionHandler.Update).Methods("PUT")
-	router.HandleFunc("/tour/{id}", tourHandler.GetById).Methods("GET")
-	router.HandleFunc("/tours/publish", tourHandler.Publish).Methods("PUT")
-	router.HandleFunc("/tours/archive", tourHandler.Archive).Methods("PUT")
-	router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
-	router.HandleFunc("/keyPoints", keyPointHandler.Update).Methods("PUT")
-	router.HandleFunc("/keyPoints/{id}", keyPointHandler.Delete).Methods("DELETE")
-	router.HandleFunc("/keyPoints/tour/{id}", keyPointHandler.GetKeyPoints).Methods("GET")
-	router.HandleFunc("/preference/{id}", preferenceHandler.GetByUserId).Methods("GET")
-	router.HandleFunc("/preference", preferenceHandler.Create).Methods("POST")
-	router.HandleFunc("/preference", preferenceHandler.Update).Methods("PUT")
-	router.HandleFunc("/preference/{id}", preferenceHandler.Delete).Methods("DELETE")
-	router.HandleFunc("/equipment/all", eqHandler.GetAll).Methods("GET")
-	router.HandleFunc("/equipment/tour/{id}", eqHandler.GetByTourId).Methods("GET")
-	router.HandleFunc("/equipment", eqHandler.Create).Methods("POST")
-	router.HandleFunc("/equipment", eqHandler.Update).Methods("PUT")
-	router.HandleFunc("/equipment/{id}", eqHandler.Delete).Methods("DELETE")
-	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Add).Methods("POST")
-	router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Remove).Methods("DELETE")
-	router.HandleFunc("/tour/canBeRated/{tourId}/{userId}", tourExecutionHandler.CanTourBeRated).Methods("GET")
-	router.HandleFunc("/review", reviewHandler.Create).Methods("POST")
-	router.HandleFunc("/reviews/{tourId}", reviewHandler.GetReviewsByTourId).Methods("GET")
+	grpcServer := grpc.NewServer()
+	reflection.Register(grpcServer)
 
-	configureToursHandler(router, tourHandler)
-	configureTourExecutionHandler(router, tourExecutionHandler)
+	tourServer := tour.TourServer{TourService: *tourService}
+	tour.RegisterMarketplaceTourServer(grpcServer, tourServer)
 
-	// Set up CORS middleware
-	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
-	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
-	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+	fmt.Print("server started")
+	go func() {
+		if err := grpcServer.Serve(listener); err != nil {
+			log.Fatal("server error: ", err)
+		}
+	}()
 
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
-	println("Server starting")
-	log.Fatal(http.ListenAndServe(":8081", handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router)))
+	stopCh := make(chan os.Signal)
+	signal.Notify(stopCh, syscall.SIGTERM)
+
+	<-stopCh
+
+	grpcServer.Stop()
+
+	// router := mux.NewRouter().StrictSlash(true)
+
+	// router.HandleFunc("/students/{id}", studentHandler.Get).Methods("GET")
+	// router.HandleFunc("/students", studentHandler.Create).Methods("POST")
+	// router.HandleFunc("/tours/{authorId}", tourHandler.Get).Methods("GET")
+	// router.HandleFunc("/tours", tourHandler.Create).Methods("POST")
+	// router.HandleFunc("/tours", tourHandler.Update).Methods("PUT")
+	// router.HandleFunc("/touristposition", touristPositionHandler.Create).Methods("POST")
+	// router.HandleFunc("/touristposition/{tourist_id}", touristPositionHandler.GetByTouristId).Methods("GET")
+	// router.HandleFunc("/touristposition", touristPositionHandler.Update).Methods("PUT")
+	// router.HandleFunc("/tour/{id}", tourHandler.GetById).Methods("GET")
+	// router.HandleFunc("/tours/publish", tourHandler.Publish).Methods("PUT")
+	// router.HandleFunc("/tours/archive", tourHandler.Archive).Methods("PUT")
+	// router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
+	// router.HandleFunc("/keyPoints", keyPointHandler.Update).Methods("PUT")
+	// router.HandleFunc("/keyPoints/{id}", keyPointHandler.Delete).Methods("DELETE")
+	// router.HandleFunc("/keyPoints/tour/{id}", keyPointHandler.GetKeyPoints).Methods("GET")
+	// router.HandleFunc("/preference/{id}", preferenceHandler.GetByUserId).Methods("GET")
+	// router.HandleFunc("/preference", preferenceHandler.Create).Methods("POST")
+	// router.HandleFunc("/preference", preferenceHandler.Update).Methods("PUT")
+	// router.HandleFunc("/preference/{id}", preferenceHandler.Delete).Methods("DELETE")
+	// router.HandleFunc("/equipment/all", eqHandler.GetAll).Methods("GET")
+	// router.HandleFunc("/equipment/tour/{id}", eqHandler.GetByTourId).Methods("GET")
+	// router.HandleFunc("/equipment", eqHandler.Create).Methods("POST")
+	// router.HandleFunc("/equipment", eqHandler.Update).Methods("PUT")
+	// router.HandleFunc("/equipment/{id}", eqHandler.Delete).Methods("DELETE")
+	// router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Add).Methods("POST")
+	// router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Remove).Methods("DELETE")
+	// router.HandleFunc("/tour/canBeRated/{tourId}/{userId}", tourExecutionHandler.CanTourBeRated).Methods("GET")
+	// router.HandleFunc("/review", reviewHandler.Create).Methods("POST")
+	// router.HandleFunc("/reviews/{tourId}", reviewHandler.GetReviewsByTourId).Methods("GET")
+
+	// configureToursHandler(router, tourHandler)
+	// configureTourExecutionHandler(router, tourExecutionHandler)
+
+	// // Set up CORS middleware
+	// allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
+	// allowedOrigins := handlers.AllowedOrigins([]string{"*"})
+	// allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+
+	// router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
+	// println("Server starting")
+	// log.Fatal(http.ListenAndServe(":8081", handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router)))
 }
