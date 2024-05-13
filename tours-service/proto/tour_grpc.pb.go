@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             v5.26.1
-// source: proto/tour.proto
+// source: tour.proto
 
 package tour
 
@@ -20,13 +20,17 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	MarketplaceTour_GetPublishedTours_FullMethodName = "/MarketplaceTour/GetPublishedTours"
+	MarketplaceTour_GetAuthorTours_FullMethodName    = "/MarketplaceTour/GetAuthorTours"
+	MarketplaceTour_GetTour_FullMethodName           = "/MarketplaceTour/GetTour"
 )
 
 // MarketplaceTourClient is the client API for MarketplaceTour service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MarketplaceTourClient interface {
-	GetPublishedTours(ctx context.Context, in *Page, opts ...grpc.CallOption) (*TourResponse, error)
+	GetPublishedTours(ctx context.Context, in *Page, opts ...grpc.CallOption) (*TourResponseList, error)
+	GetAuthorTours(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*TourResponseList, error)
+	GetTour(ctx context.Context, in *TourId, opts ...grpc.CallOption) (*TourResponse, error)
 }
 
 type marketplaceTourClient struct {
@@ -37,9 +41,27 @@ func NewMarketplaceTourClient(cc grpc.ClientConnInterface) MarketplaceTourClient
 	return &marketplaceTourClient{cc}
 }
 
-func (c *marketplaceTourClient) GetPublishedTours(ctx context.Context, in *Page, opts ...grpc.CallOption) (*TourResponse, error) {
-	out := new(TourResponse)
+func (c *marketplaceTourClient) GetPublishedTours(ctx context.Context, in *Page, opts ...grpc.CallOption) (*TourResponseList, error) {
+	out := new(TourResponseList)
 	err := c.cc.Invoke(ctx, MarketplaceTour_GetPublishedTours_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *marketplaceTourClient) GetAuthorTours(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*TourResponseList, error) {
+	out := new(TourResponseList)
+	err := c.cc.Invoke(ctx, MarketplaceTour_GetAuthorTours_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *marketplaceTourClient) GetTour(ctx context.Context, in *TourId, opts ...grpc.CallOption) (*TourResponse, error) {
+	out := new(TourResponse)
+	err := c.cc.Invoke(ctx, MarketplaceTour_GetTour_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +72,9 @@ func (c *marketplaceTourClient) GetPublishedTours(ctx context.Context, in *Page,
 // All implementations must embed UnimplementedMarketplaceTourServer
 // for forward compatibility
 type MarketplaceTourServer interface {
-	GetPublishedTours(context.Context, *Page) (*TourResponse, error)
+	GetPublishedTours(context.Context, *Page) (*TourResponseList, error)
+	GetAuthorTours(context.Context, *AuthorId) (*TourResponseList, error)
+	GetTour(context.Context, *TourId) (*TourResponse, error)
 	mustEmbedUnimplementedMarketplaceTourServer()
 }
 
@@ -58,8 +82,14 @@ type MarketplaceTourServer interface {
 type UnimplementedMarketplaceTourServer struct {
 }
 
-func (UnimplementedMarketplaceTourServer) GetPublishedTours(context.Context, *Page) (*TourResponse, error) {
+func (UnimplementedMarketplaceTourServer) GetPublishedTours(context.Context, *Page) (*TourResponseList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPublishedTours not implemented")
+}
+func (UnimplementedMarketplaceTourServer) GetAuthorTours(context.Context, *AuthorId) (*TourResponseList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuthorTours not implemented")
+}
+func (UnimplementedMarketplaceTourServer) GetTour(context.Context, *TourId) (*TourResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTour not implemented")
 }
 func (UnimplementedMarketplaceTourServer) mustEmbedUnimplementedMarketplaceTourServer() {}
 
@@ -92,6 +122,42 @@ func _MarketplaceTour_GetPublishedTours_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MarketplaceTour_GetAuthorTours_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AuthorId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketplaceTourServer).GetAuthorTours(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MarketplaceTour_GetAuthorTours_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketplaceTourServer).GetAuthorTours(ctx, req.(*AuthorId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MarketplaceTour_GetTour_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TourId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketplaceTourServer).GetTour(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MarketplaceTour_GetTour_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketplaceTourServer).GetTour(ctx, req.(*TourId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MarketplaceTour_ServiceDesc is the grpc.ServiceDesc for MarketplaceTour service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -103,7 +169,15 @@ var MarketplaceTour_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetPublishedTours",
 			Handler:    _MarketplaceTour_GetPublishedTours_Handler,
 		},
+		{
+			MethodName: "GetAuthorTours",
+			Handler:    _MarketplaceTour_GetAuthorTours_Handler,
+		},
+		{
+			MethodName: "GetTour",
+			Handler:    _MarketplaceTour_GetTour_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/tour.proto",
+	Metadata: "tour.proto",
 }

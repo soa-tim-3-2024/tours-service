@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+option go_package = "proto/authoringKeyPoint";
+
+service AuthoringKeyPoint {
+  rpc CreateKeyPoint (KeyPointCreate) returns (KeyPoint) {}
+  rpc UpdateKeyPoint (KeyPointUpdate) returns (KeyPoint) {}
+  rpc DeleteKeyPoint (KeyPointId) returns (KeyPoint) {}
+}
+
+message KeyPointId{
+    int64 keyPointId = 1;
+}
+
+message KeyPoint {
+    int64 id = 1;
+    int64 tourId = 2;
+    string name = 3;
+    string description = 4;
+    double longitude = 5;
+    double latitude = 6;
+    string locationAddress = 7;
+    string imagePath = 8;
+    int64 order = 9;
+}
+
+message KeyPointCreate {
+    int64 tourId = 1;
+    string name = 2;
+    string description = 3;
+    double longitude = 4;
+    double latitude = 5;
+    string locationAddress = 6;
+    string ImagePath = 7;
+    int64 order = 8;
+    bool isEncounterRequired = 9;
+    bool hasEncounter = 10;
+}
+
+message KeyPointUpdate {
+    int64 id = 1;
+    int64 tourId = 2;
+    string name = 3;
+    string description = 4;
+    double longitude = 5;
+    double latitude = 6;
+    string locationAddress = 7;
+    string ImagePath = 8;
+    int64 order = 9;
+}

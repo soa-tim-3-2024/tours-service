@@ -4,6 +4,8 @@ import (
 	"database-example/handler"
 	"database-example/model"
 	tour "database-example/proto"
+	"database-example/proto/authoring"
+	"database-example/proto/authoringKeyPoint"
 	"database-example/repo"
 	"database-example/service"
 	"fmt"
@@ -24,7 +26,7 @@ import (
 
 func initDB() *gorm.DB {
 
-	dsn := "host=localhost user=postgres password=super dbname=nzm port=5432 sslmode=disable"
+	dsn := "host=localhost user=postgres password=super dbname=gorm port=5432 sslmode=disable"
 	//dsn := "host=database user=postgres password=super dbname=nzm port=5432 sslmode=disable"
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -66,6 +68,9 @@ func main() {
 
 	tourRepo := &repo.TourRepository{DatabaseConnection: database}
 	tourService := &service.TourService{TourRepo: tourRepo}
+
+	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: database}
+	keyPointService := &service.KeyPointService{KeyPointRepo: keyPointRepo}
 	//tourHandler := &handler.TourHandler{TourService: tourService}
 
 	// keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: database}
@@ -108,6 +113,12 @@ func main() {
 
 	tourServer := tour.TourServer{TourService: *tourService}
 	tour.RegisterMarketplaceTourServer(grpcServer, tourServer)
+
+	authoringServer := authoring.AuthoringServer1{TourService: *tourService}
+	authoring.RegisterAuthoringServer(grpcServer, authoringServer)
+
+	authoringKeyPointServer := authoringKeyPoint.AuthoringKeyPointServer1{KeyPointService: *keyPointService}
+	authoringKeyPoint.RegisterAuthoringKeyPointServer(grpcServer, authoringKeyPointServer)
 
 	fmt.Print("server started")
 	go func() {

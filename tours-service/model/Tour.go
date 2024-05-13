@@ -24,7 +24,7 @@ type Tour struct {
 	AuthorId    int           `json:"authorId"`
 	Name        string        `json:"name"`
 	Description string        `json:"description"`
-	Difficulty  int           `json:"difficulty"`
+	Difficulty  int32         `json:"difficulty"`
 	Category    int           `json:"category"`
 	Tags        StringArray   `json:"tags"`
 	TourStatus  Status        `json:"status"`
@@ -32,7 +32,7 @@ type Tour struct {
 	Distance    float64       `json:"distance"`
 	KeyPoints   []KeyPoint    `json:"keyPoints"`
 	Durations   TourDurations `json:"durations" gorm:"type:jsonb"`
-	Equipment []Equipment `gorm:"many2many:tour_equipment;"`
+	Equipment   []Equipment   `gorm:"many2many:tour_equipment;"`
 }
 
 // konvertuje tip podatka iz go-a u tip podatka u bazi (jer gorm ne moze sam da rukuje sa nizom stringova kao atributom)
