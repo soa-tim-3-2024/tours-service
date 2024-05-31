@@ -7,25 +7,27 @@ import (
 	"database-example/proto/authoring"
 	"database-example/proto/authoringKeyPoint"
 	"database-example/repo"
+	"database-example/saga"
+	"database-example/saga/nats"
 	"database-example/service"
 	"fmt"
+	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"log"
-	"net"
-
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-
-	"github.com/gorilla/mux"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func initDB() *gorm.DB {
+const (
+	QueueGroup = "order_service"
+)
 
+func initDB() *gorm.DB {
 	dsn := "host=localhost user=postgres password=super dbname=gorm port=5432 sslmode=disable"
 	//dsn := "host=database user=postgres password=super dbname=nzm port=5432 sslmode=disable"
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -45,15 +47,43 @@ func initDB() *gorm.DB {
 	return database
 }
 
-func configureToursHandler(router *mux.Router, tourHandler *handler.TourHandler) {
-	router.HandleFunc("/tours/published/all", tourHandler.FindPublishedTours).Methods("GET")
-	router.HandleFunc("/tours/tours-list", tourHandler.GetToursByIds).Methods("POST")
+func initPublisher(subject string) saga.Publisher {
+	publisher, err := nats.NewNATSPublisher(
+		"nats", "4222",
+		"ruser", "T0pS3cr3t", subject)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return publisher
 }
 
-func configureTourExecutionHandler(router *mux.Router, tourExecutionHandler *handler.TourExecutionHandler) {
-	router.HandleFunc("/tour-execution/{tourId}/{touristId}", tourExecutionHandler.Create).Methods("GET")
-	router.HandleFunc("/tour-execution/check-completition", tourExecutionHandler.CheckKeyPointCompletition).Methods("POST")
-	router.HandleFunc("/tour-execution-abandoning/{id}", tourExecutionHandler.AbandonTour).Methods("GET")
+func initSubscriber(subject, queueGroup string) saga.Subscriber {
+	subscriber, err := nats.NewNATSSubscriber(
+		"nats", "4222",
+		"ruser", "T0pS3cr3t", subject, queueGroup)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return subscriber
+}
+
+func initDeleteTourOrchestrator(publisher saga.Publisher, subscriber saga.Subscriber) *service.DeleteTourOrchestrator {
+	orchestrator, err := service.NewDeleteTourOrchestrator(publisher, subscriber)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return orchestrator
+}
+
+func initDeleteTourHandler(service *service.TourService, publisher saga.Publisher, subscriber saga.Subscriber) {
+	_, err := handler.NewDeleteTourCommandHandler(service, publisher, subscriber)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func initTourService(repo repo.TourRepository, orchestrator *service.DeleteTourOrchestrator) *service.TourService {
+	return service.NewTourService(repo, orchestrator)
 }
 
 func main() {
@@ -62,40 +92,20 @@ func main() {
 		print("FAILED TO CONNECT TO DB")
 		return
 	}
-	// studentRepo := &repo.StudentRepository{DatabaseConnection: database}
-	// studentService := &service.StudentService{StudentRepo: studentRepo}
-	// studentHandler := &handler.StudentHandler{StudentService: studentService}
+
+	commandPublisher := initPublisher("tour.delete.command")
+	replySubscriber := initSubscriber("tour.delete.reply", QueueGroup)
+	deleteTourOrchestrator := initDeleteTourOrchestrator(commandPublisher, replySubscriber)
 
 	tourRepo := &repo.TourRepository{DatabaseConnection: database}
-	tourService := &service.TourService{TourRepo: tourRepo}
-
+	//tourService := &service.TourService{TourRepo: tourRepo}
+	tourService := initTourService(*tourRepo, deleteTourOrchestrator)
 	keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: database}
 	keyPointService := &service.KeyPointService{KeyPointRepo: keyPointRepo}
-	//tourHandler := &handler.TourHandler{TourService: tourService}
 
-	// keyPointRepo := &repo.KeyPointRepository{DatabaseConnection: database}
-	// keyPointService := &service.KeyPointService{KeyPointRepo: keyPointRepo}
-	// keyPointHandler := &handler.KeyPointHandler{KeyPointService: keyPointService}
-
-	// touristPositionRepo := &repo.TouristPositionRepository{DatabaseConnection: database}
-	// touristPositionService := &service.TouristPositionService{TouristPositionRepo: touristPositionRepo}
-	// touristPositionHandler := &handler.TouristPositionHandler{TouristPositionService: touristPositionService}
-
-	// preferenceRepo := &repo.PreferenceRepository{DatabaseConnection: database}
-	// preferenceService := &service.PreferenceService{PrefRepo: preferenceRepo}
-	// preferenceHandler := &handler.PreferenceHandler{PreferenceService: preferenceService}
-
-	// eqRepo := &repo.EquipmentRepository{DatabaseConnection: database}
-	// eqService := &service.EquipmentService{EquipmentRepo: eqRepo}
-	// eqHandler := &handler.EquipmentHandler{EquipmentService: eqService}
-
-	// tourExecutionRepo := &repo.TourExecutionRepository{DatabaseConnection: database}
-	// tourExecutionService := &service.TourExecutionService{TourExecutionRepo: tourExecutionRepo, KeyPointRepo: keyPointRepo}
-	// tourExecutionHandler := &handler.TourExecutionHandler{TourExecutionService: tourExecutionService}
-
-	// reviewRepo := &repo.ReviewRepository{DatabaseConnection: database}
-	// reviewService := &service.ReviewService{ReviewRepo: reviewRepo}
-	// reviewHandler := &handler.ReviewHandler{ReviewService: reviewService}
+	commandSubscriber := initSubscriber("tour.delete.command", QueueGroup)
+	replyPublisher := initPublisher("tour.delete.reply")
+	initDeleteTourHandler(tourService, replyPublisher, commandSubscriber)
 
 	listener, err := net.Listen("tcp", "localhost:8083")
 	if err != nil {
@@ -134,47 +144,4 @@ func main() {
 
 	grpcServer.Stop()
 
-	// router := mux.NewRouter().StrictSlash(true)
-
-	// router.HandleFunc("/students/{id}", studentHandler.Get).Methods("GET")
-	// router.HandleFunc("/students", studentHandler.Create).Methods("POST")
-	// router.HandleFunc("/tours/{authorId}", tourHandler.Get).Methods("GET")
-	// router.HandleFunc("/tours", tourHandler.Create).Methods("POST")
-	// router.HandleFunc("/tours", tourHandler.Update).Methods("PUT")
-	// router.HandleFunc("/touristposition", touristPositionHandler.Create).Methods("POST")
-	// router.HandleFunc("/touristposition/{tourist_id}", touristPositionHandler.GetByTouristId).Methods("GET")
-	// router.HandleFunc("/touristposition", touristPositionHandler.Update).Methods("PUT")
-	// router.HandleFunc("/tour/{id}", tourHandler.GetById).Methods("GET")
-	// router.HandleFunc("/tours/publish", tourHandler.Publish).Methods("PUT")
-	// router.HandleFunc("/tours/archive", tourHandler.Archive).Methods("PUT")
-	// router.HandleFunc("/keyPoints", keyPointHandler.Create).Methods("POST")
-	// router.HandleFunc("/keyPoints", keyPointHandler.Update).Methods("PUT")
-	// router.HandleFunc("/keyPoints/{id}", keyPointHandler.Delete).Methods("DELETE")
-	// router.HandleFunc("/keyPoints/tour/{id}", keyPointHandler.GetKeyPoints).Methods("GET")
-	// router.HandleFunc("/preference/{id}", preferenceHandler.GetByUserId).Methods("GET")
-	// router.HandleFunc("/preference", preferenceHandler.Create).Methods("POST")
-	// router.HandleFunc("/preference", preferenceHandler.Update).Methods("PUT")
-	// router.HandleFunc("/preference/{id}", preferenceHandler.Delete).Methods("DELETE")
-	// router.HandleFunc("/equipment/all", eqHandler.GetAll).Methods("GET")
-	// router.HandleFunc("/equipment/tour/{id}", eqHandler.GetByTourId).Methods("GET")
-	// router.HandleFunc("/equipment", eqHandler.Create).Methods("POST")
-	// router.HandleFunc("/equipment", eqHandler.Update).Methods("PUT")
-	// router.HandleFunc("/equipment/{id}", eqHandler.Delete).Methods("DELETE")
-	// router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Add).Methods("POST")
-	// router.HandleFunc("/equipment/{idEq}/{idTour}", eqHandler.Remove).Methods("DELETE")
-	// router.HandleFunc("/tour/canBeRated/{tourId}/{userId}", tourExecutionHandler.CanTourBeRated).Methods("GET")
-	// router.HandleFunc("/review", reviewHandler.Create).Methods("POST")
-	// router.HandleFunc("/reviews/{tourId}", reviewHandler.GetReviewsByTourId).Methods("GET")
-
-	// configureToursHandler(router, tourHandler)
-	// configureTourExecutionHandler(router, tourExecutionHandler)
-
-	// // Set up CORS middleware
-	// allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
-	// allowedOrigins := handlers.AllowedOrigins([]string{"*"})
-	// allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
-
-	// router.PathPrefix("/").Handler(http.FileServer(http.Dir("./static")))
-	// println("Server starting")
-	// log.Fatal(http.ListenAndServe(":8081", handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router)))
 }

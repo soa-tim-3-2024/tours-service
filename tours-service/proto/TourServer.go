@@ -49,7 +49,7 @@ func (ts TourServer) GetAuthorTours(context context.Context, authorId *AuthorId)
 	var toursResponse []*TourResponse
 	for _, tour := range tours {
 		toursResponse = append(toursResponse, &TourResponse{Id: int64(tour.ID), AuthorId: int64(tour.AuthorId), Name: tour.Name, Description: tour.Description, Tags: tour.Tags, Status: TourResponse_TourStatus(tour.TourStatus),
-			Difficulty: tour.Difficulty, Category: TourResponse_TourCategory(tour.Category), Price: tour.Price, Distance: tour.Distance})
+			Difficulty: tour.Difficulty, Category: TourResponse_TourCategory(tour.Category), Price: tour.Price, Distance: tour.Distance, IsDeleted: tour.IsDeleted})
 	}
 	var toursResponses TourResponseList
 	toursResponses.TourResponses = toursResponse
@@ -75,6 +75,32 @@ func (ts TourServer) GetTour(context context.Context, tourId *TourId) (*TourResp
 	toursResponse = &TourResponse{Id: int64(tour.ID), Name: tour.Name, Description: tour.Description, Tags: tour.Tags, Status: TourResponse_TourStatus(tour.TourStatus),
 		Difficulty: tour.Difficulty, Category: TourResponse_TourCategory(tour.Category), Price: tour.Price, Distance: tour.Distance, AuthorId: int64(tour.AuthorId),
 		KeyPoints: keyPoints /*, Durations: durations*/}
+
+	return toursResponse, nil
+}
+
+func (ts TourServer) DeleteTour(context context.Context, tourId *TourId) (*TourResponse, error) {
+	id := strconv.Itoa(int(tourId.TourId))
+	tour, err := ts.TourService.FindTour(id)
+	if err != nil {
+		return nil, err
+	}
+	tour.IsDeleted = true
+	tour.Durations = nil
+	ts.TourService.DeleteTour(tour)
+	var toursResponse *TourResponse
+	keyPoints := []*KeyPointResponse{}
+	durations := []*TourDuration{}
+	for _, kp := range tour.KeyPoints {
+		keyPoints = append(keyPoints, &KeyPointResponse{Id: int64(kp.ID), Longitude: kp.Longitude, Latitude: kp.Latitude, LocationAddress: kp.LocationAddress,
+			Name: kp.Name, Description: kp.Description, TourId: int64(kp.TourId), ImagePath: kp.ImagePath, Order: int64(kp.Order)})
+	}
+	for _, duration := range tour.Durations {
+		durations = append(durations, &TourDuration{Duration: int32(duration.Duration), TransportType: TourDuration_TransportType(duration.TransportType)})
+	}
+	toursResponse = &TourResponse{Id: int64(tour.ID), Name: tour.Name, Description: tour.Description, Tags: tour.Tags, Status: TourResponse_TourStatus(tour.TourStatus),
+		Difficulty: tour.Difficulty, Category: TourResponse_TourCategory(tour.Category), Price: tour.Price, Distance: tour.Distance, AuthorId: int64(tour.AuthorId),
+		KeyPoints: keyPoints /*, Durations: durations*/, IsDeleted: true}
 
 	return toursResponse, nil
 }

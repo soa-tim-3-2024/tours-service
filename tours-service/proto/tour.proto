@@ -7,6 +7,7 @@ service MarketplaceTour {
   rpc GetPublishedTours (Page) returns (TourResponseList) {}
   rpc GetAuthorTours (AuthorId) returns (TourResponseList) {}
   rpc GetTour (TourId) returns (TourResponse) {}
+  rpc DeleteTour (TourId) returns (TourResponse) {}
 }
 
 message Page {

@@ -30,6 +30,7 @@ type Tour struct {
 	TourStatus  Status        `json:"status"`
 	Price       float64       `json:"price"`
 	Distance    float64       `json:"distance"`
+	IsDeleted   bool          `json:"isDeleted"`
 	KeyPoints   []KeyPoint    `json:"keyPoints"`
 	Durations   TourDurations `json:"durations" gorm:"type:jsonb"`
 	Equipment   []Equipment   `gorm:"many2many:tour_equipment;"`

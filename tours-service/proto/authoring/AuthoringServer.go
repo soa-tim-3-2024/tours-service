@@ -13,7 +13,7 @@ type AuthoringServer1 struct {
 
 func (ts AuthoringServer1) AddTour(context context.Context, newTour *TourCreate) (*TourResponseAuthor, error) {
 	tour := model.Tour{AuthorId: int(newTour.AuthorId), Name: newTour.Name, Description: newTour.Description, Difficulty: newTour.Difficulty, Category: int(newTour.Category), Tags: newTour.Tags,
-		Price: newTour.Price, TourStatus: model.Status(newTour.Status)}
+		Price: newTour.Price, TourStatus: model.Status(newTour.Status), IsDeleted: false}
 	err := ts.TourService.Create(&tour)
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func (ts AuthoringServer1) AddTour(context context.Context, newTour *TourCreate)
 
 func (ts AuthoringServer1) UpdateTour(context context.Context, newTour *TourUpdate) (*TourResponseAuthor, error) {
 	tour := model.Tour{ID: int(newTour.Id), AuthorId: int(newTour.AuthorId), Name: newTour.Name, Description: newTour.Description, Difficulty: newTour.Difficulty, Category: int(newTour.Category), Tags: newTour.Tags,
-		Price: newTour.Price, TourStatus: model.Status(newTour.Status)}
+		Price: newTour.Price, TourStatus: model.Status(newTour.Status), IsDeleted: false}
 	err := ts.TourService.Update(&tour)
 	if err != nil {
 		return nil, err

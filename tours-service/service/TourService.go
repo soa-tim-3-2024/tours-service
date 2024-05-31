@@ -4,10 +4,19 @@ import (
 	"database-example/model"
 	"database-example/repo"
 	"fmt"
+	"strconv"
 )
 
 type TourService struct {
-	TourRepo *repo.TourRepository
+	TourRepo     *repo.TourRepository
+	orchestrator *DeleteTourOrchestrator
+}
+
+func NewTourService(repo repo.TourRepository, orchestrator *DeleteTourOrchestrator) *TourService {
+	return &TourService{
+		TourRepo:     &repo,
+		orchestrator: orchestrator,
+	}
 }
 
 func (service *TourService) GetAuthorTours(authorId int) ([]model.Tour, error) {
@@ -69,6 +78,30 @@ func (service *TourService) PublishTour(tour *model.Tour) error {
 
 func (service *TourService) ArchiveTour(tour *model.Tour) error {
 	tour.TourStatus = model.Status(model.Archived)
+	err := service.TourRepo.UpdateTour(tour)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (service *TourService) DeleteTour(tour *model.Tour) error {
+	err := service.TourRepo.UpdateTour(tour)
+	if err != nil {
+		return err
+	}
+	err = service.orchestrator.Start(int64(tour.ID))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (service *TourService) RollbackTourDelete(tourId int64) error {
+	id := strconv.Itoa(int(tourId))
+	tour, _ := service.FindTour(id)
+	tour.IsDeleted = false
+	tour.Durations = nil
 	err := service.TourRepo.UpdateTour(tour)
 	if err != nil {
 		return err

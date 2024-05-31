@@ -22,6 +22,7 @@ const (
 	MarketplaceTour_GetPublishedTours_FullMethodName = "/MarketplaceTour/GetPublishedTours"
 	MarketplaceTour_GetAuthorTours_FullMethodName    = "/MarketplaceTour/GetAuthorTours"
 	MarketplaceTour_GetTour_FullMethodName           = "/MarketplaceTour/GetTour"
+	MarketplaceTour_DeleteTour_FullMethodName        = "/MarketplaceTour/DeleteTour"
 )
 
 // MarketplaceTourClient is the client API for MarketplaceTour service.
@@ -31,6 +32,7 @@ type MarketplaceTourClient interface {
 	GetPublishedTours(ctx context.Context, in *Page, opts ...grpc.CallOption) (*TourResponseList, error)
 	GetAuthorTours(ctx context.Context, in *AuthorId, opts ...grpc.CallOption) (*TourResponseList, error)
 	GetTour(ctx context.Context, in *TourId, opts ...grpc.CallOption) (*TourResponse, error)
+	DeleteTour(ctx context.Context, in *TourId, opts ...grpc.CallOption) (*TourResponse, error)
 }
 
 type marketplaceTourClient struct {
@@ -68,6 +70,15 @@ func (c *marketplaceTourClient) GetTour(ctx context.Context, in *TourId, opts ..
 	return out, nil
 }
 
+func (c *marketplaceTourClient) DeleteTour(ctx context.Context, in *TourId, opts ...grpc.CallOption) (*TourResponse, error) {
+	out := new(TourResponse)
+	err := c.cc.Invoke(ctx, MarketplaceTour_DeleteTour_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MarketplaceTourServer is the server API for MarketplaceTour service.
 // All implementations must embed UnimplementedMarketplaceTourServer
 // for forward compatibility
@@ -75,6 +86,7 @@ type MarketplaceTourServer interface {
 	GetPublishedTours(context.Context, *Page) (*TourResponseList, error)
 	GetAuthorTours(context.Context, *AuthorId) (*TourResponseList, error)
 	GetTour(context.Context, *TourId) (*TourResponse, error)
+	DeleteTour(context.Context, *TourId) (*TourResponse, error)
 	mustEmbedUnimplementedMarketplaceTourServer()
 }
 
@@ -90,6 +102,9 @@ func (UnimplementedMarketplaceTourServer) GetAuthorTours(context.Context, *Autho
 }
 func (UnimplementedMarketplaceTourServer) GetTour(context.Context, *TourId) (*TourResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTour not implemented")
+}
+func (UnimplementedMarketplaceTourServer) DeleteTour(context.Context, *TourId) (*TourResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTour not implemented")
 }
 func (UnimplementedMarketplaceTourServer) mustEmbedUnimplementedMarketplaceTourServer() {}
 
@@ -158,6 +173,24 @@ func _MarketplaceTour_GetTour_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MarketplaceTour_DeleteTour_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TourId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MarketplaceTourServer).DeleteTour(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MarketplaceTour_DeleteTour_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MarketplaceTourServer).DeleteTour(ctx, req.(*TourId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MarketplaceTour_ServiceDesc is the grpc.ServiceDesc for MarketplaceTour service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -176,6 +209,10 @@ var MarketplaceTour_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTour",
 			Handler:    _MarketplaceTour_GetTour_Handler,
+		},
+		{
+			MethodName: "DeleteTour",
+			Handler:    _MarketplaceTour_DeleteTour_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
